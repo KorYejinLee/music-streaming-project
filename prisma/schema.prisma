@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  accountId    Int     @unique
+  name         String
+  password     String
+  email        String
+  refreshToken String? @db.VarChar(500)
+  role         String
+  likes        Like[]
+}
+
+model Song {
+  id       Int    @id @default(autoincrement())
+  artistId Int
+  albumId  Int
+  duration Int // 재생시간 "MM:SS" 형식 (예 "04:06")
+  name     String
+  likes    Like[]
+
+  artist Artist @relation(fields: [artistId], references: [id])
+  album  Album  @relation(fields: [albumId], references: [id])
+}
+
+model Artist {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  songs Song[]
+}
+
+model Album {
+  id          Int     @id @default(autoincrement())
+  name        String
+  image       String
+  type        String? // 유형
+  genre       String? // 장르
+  releaseDate String? // 발매일 (예 2025.04.04)
+  distributor String? // 발매사
+  agency      String? // 기획사
+  description String? // 앨범 소개
+  songs       Song[]
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  songId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  song Song @relation(fields: [songId], references: [id])
+
+  @@unique([userId, songId])
+}
